@@ -44,7 +44,7 @@ export default class HtmlComment extends Plugin {
 		editor.conversion.for( 'upcast' ).elementToMarker( {
 			view: '$comment',
 			model: ( viewElement, { writer } ) => {
-				const root = this.editor.model.document.getRoot()!;
+				const root = this.editor.model.document.getRoot( this.editor.model.document.selection.getFirstRange()!.root.rootName! )!;
 				const commentContent = viewElement.getCustomProperty( '$rawContent' );
 				const markerName = `$comment:${ uid() }`;
 
@@ -58,9 +58,17 @@ export default class HtmlComment extends Plugin {
 		editor.conversion.for( 'dataDowncast' ).markerToElement( {
 			model: '$comment',
 			view: ( modelElement, { writer } ) => {
-				const root = this.editor.model.document.getRoot()!;
+				const rootNames = this.editor.model.document.getRootNames();
+				let root = undefined;
+				for( const rootName of rootNames ) {
+					root = this.editor.model.document.getRoot( rootName )!;
+					if ( root.hasAttribute( modelElement.markerName ) ) {
+						break;
+					}
+				}
+
 				const markerName = modelElement.markerName;
-				const commentContent = root.getAttribute( markerName );
+				const commentContent = root!.getAttribute( markerName );
 				const comment = writer.createUIElement( '$comment' );
 
 				writer.setCustomProperty( '$rawContent', commentContent, comment );
@@ -71,7 +79,7 @@ export default class HtmlComment extends Plugin {
 
 		// Remove comments' markers and their corresponding $root attributes, which are no longer present.
 		editor.model.document.registerPostFixer( writer => {
-			const root = editor.model.document.getRoot()!;
+			const root = editor.model.document.getRoot( editor.model.document.selection.getFirstRange()!.root.rootName! )!;
 
 			const changedMarkers = editor.model.document.differ.getChangedMarkers();
 
@@ -138,7 +146,7 @@ export default class HtmlComment extends Plugin {
 		const id = uid();
 		const editor = this.editor;
 		const model = editor.model;
-		const root = model.document.getRoot()!;
+		const root = model.document.getRoot( position.root.rootName )!;
 		const markerName = `$comment:${ id }`;
 
 		return model.change( writer => {
@@ -169,8 +177,6 @@ export default class HtmlComment extends Plugin {
 	 */
 	public removeHtmlComment( commentID: string ): boolean {
 		const editor = this.editor;
-		const root = editor.model.document.getRoot()!;
-
 		const marker = editor.model.markers.get( commentID );
 
 		if ( !marker ) {
@@ -179,7 +185,14 @@ export default class HtmlComment extends Plugin {
 
 		editor.model.change( writer => {
 			writer.removeMarker( marker );
-			writer.removeAttribute( commentID, root );
+
+			for( const rootName of this.editor.model.document.getRootNames() ) {
+				let root = editor.model.document.getRoot( rootName )!;
+				if ( root.hasAttribute( commentID ) ) {
+					writer.removeAttribute( commentID, root );
+					break;
+				}
+			}
 		} );
 
 		return true;
@@ -194,14 +207,22 @@ export default class HtmlComment extends Plugin {
 	public getHtmlCommentData( commentID: string ): HtmlCommentData | null {
 		const editor = this.editor;
 		const marker = editor.model.markers.get( commentID );
-		const root = editor.model.document.getRoot()!;
 
 		if ( !marker ) {
 			return null;
 		}
 
+		let content = "";
+		for( const rootName of this.editor.model.document.getRootNames() ) {
+			let root = editor.model.document.getRoot( rootName )!;
+			if ( root.hasAttribute( commentID ) ) {
+				content = root.getAttribute( commentID ) as string;
+				break;
+			}
+		}
+
 		return {
-			content: root.getAttribute( commentID ) as string,
+			content: content,
 			position: marker.getStart()
 		};
 	}

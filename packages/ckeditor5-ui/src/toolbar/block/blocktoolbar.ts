@@ -449,7 +449,7 @@ export default class BlockToolbar extends Plugin {
 	private _attachButtonToElement( targetElement: HTMLElement ) {
 		const contentStyles = window.getComputedStyle( targetElement );
 
-		const editableRect = new Rect( this.editor.ui.getEditableElement()! );
+		const editableRect = new Rect( this.editor.ui.getEditableElement( this.editor.model.document.selection.getFirstRange()!.root.rootName! )! );
 		const contentPaddingTop = parseInt( contentStyles.paddingTop, 10 );
 		// When line height is not an integer then thread it as "normal".
 		// MDN says that 'normal' == ~1.2 on desktop browsers.
