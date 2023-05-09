@@ -255,7 +255,10 @@ export default class WordCount extends Plugin {
 	 * Determines the number of characters in the current editor's model.
 	 */
 	private _getCharacters(): number {
-		const txt = modelElementToPlainText( this.editor.model.document.getRoot( this.editor.model.document.selection.getFirstRange()!.root.rootName! )! );
+		let txt = '';
+		for ( const rootName of this.editor.model.document.getRootNames() ) {
+			txt += modelElementToPlainText( this.editor.model.document.getRoot( rootName )! );
+		}
 
 		return txt.replace( /\n/g, '' ).length;
 	}
@@ -264,7 +267,14 @@ export default class WordCount extends Plugin {
 	 * Determines the number of words in the current editor's model.
 	 */
 	private _getWords(): number {
-		const txt = modelElementToPlainText( this.editor.model.document.getRoot( this.editor.model.document.selection.getFirstRange()!.root.rootName! )! );
+		let txt = '';
+		for ( const rootName of this.editor.model.document.getRootNames() ) {
+			txt += modelElementToPlainText( this.editor.model.document.getRoot( rootName )! );
+
+			// Add delimiter (space), so words from each root are treated independently.
+			txt += ' ';
+		}
+
 		const detectedWords = txt.match( this._wordsMatchRegExp ) || [];
 
 		return detectedWords.length;

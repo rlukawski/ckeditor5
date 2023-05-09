@@ -7,7 +7,7 @@
  * @module html-support/htmlcomment
  */
 
-import type { Marker, Position, Range } from 'ckeditor5/src/engine';
+import type { Marker, Position, Range, Element, ViewRootEditableElement } from 'ckeditor5/src/engine';
 import { Plugin } from 'ckeditor5/src/core';
 import { uid } from 'ckeditor5/src/utils';
 
@@ -44,7 +44,9 @@ export default class HtmlComment extends Plugin {
 		editor.conversion.for( 'upcast' ).elementToMarker( {
 			view: '$comment',
 			model: ( viewElement, { writer } ) => {
-				const root = this.editor.model.document.getRoot( this.editor.model.document.selection.getFirstRange()!.root.rootName! )!;
+				const rootElement = viewElement.root as ViewRootEditableElement;
+				const rootName = rootElement.rootName;
+				const root = this.editor.model.document.getRoot( rootName )!;
 				const commentContent = viewElement.getCustomProperty( '$rawContent' );
 				const markerName = `$comment:${ uid() }`;
 
@@ -60,7 +62,7 @@ export default class HtmlComment extends Plugin {
 			view: ( modelElement, { writer } ) => {
 				const rootNames = this.editor.model.document.getRootNames();
 				let root = undefined;
-				for( const rootName of rootNames ) {
+				for ( const rootName of rootNames ) {
 					root = this.editor.model.document.getRoot( rootName )!;
 					if ( root.hasAttribute( modelElement.markerName ) ) {
 						break;
@@ -79,8 +81,6 @@ export default class HtmlComment extends Plugin {
 
 		// Remove comments' markers and their corresponding $root attributes, which are no longer present.
 		editor.model.document.registerPostFixer( writer => {
-			const root = editor.model.document.getRoot( editor.model.document.selection.getFirstRange()!.root.rootName! )!;
-
 			const changedMarkers = editor.model.document.differ.getChangedMarkers();
 
 			const changedCommentMarkers = changedMarkers.filter( marker => {
@@ -98,8 +98,22 @@ export default class HtmlComment extends Plugin {
 			}
 
 			for ( const marker of removedCommentMarkers ) {
+				let root = undefined;
+				if ( marker.data.oldRange ) {
+					root = marker.data.oldRange.root as Element;
+				} else {
+					// In rare cases where marker does not have oldRange set, we need to iterate through all roots.
+					for ( const rootName of this.editor.model.document.getRootNames() ) {
+						if ( this.editor.model.document.getRoot( rootName )!.hasAttribute( marker.name ) ) {
+							root = this.editor.model.document.getRoot( rootName )! as Element;
+
+							break;
+						}
+					}
+				}
+
 				writer.removeMarker( marker.name );
-				writer.removeAttribute( marker.name, root );
+				writer.removeAttribute( marker.name, root! );
 			}
 
 			return true;
@@ -186,8 +200,8 @@ export default class HtmlComment extends Plugin {
 		editor.model.change( writer => {
 			writer.removeMarker( marker );
 
-			for( const rootName of this.editor.model.document.getRootNames() ) {
-				let root = editor.model.document.getRoot( rootName )!;
+			for ( const rootName of this.editor.model.document.getRootNames() ) {
+				const root = editor.model.document.getRoot( rootName )!;
 				if ( root.hasAttribute( commentID ) ) {
 					writer.removeAttribute( commentID, root );
 					break;
@@ -212,9 +226,9 @@ export default class HtmlComment extends Plugin {
 			return null;
 		}
 
-		let content = "";
-		for( const rootName of this.editor.model.document.getRootNames() ) {
-			let root = editor.model.document.getRoot( rootName )!;
+		let content = '';
+		for ( const rootName of this.editor.model.document.getRootNames() ) {
+			const root = editor.model.document.getRoot( rootName )!;
 			if ( root.hasAttribute( commentID ) ) {
 				content = root.getAttribute( commentID ) as string;
 				break;
@@ -222,7 +236,7 @@ export default class HtmlComment extends Plugin {
 		}
 
 		return {
-			content: content,
+			content,
 			position: marker.getStart()
 		};
 	}
