@@ -76,7 +76,8 @@ export default class Minimap extends Plugin {
 	private _onUiReady(): void {
 		const editor = this.editor;
 
-		const editingRootElement = this._editingRootElement = editor.ui.view.element!;
+		// TODO: This will not work with the multi-root editor.
+		const editingRootElement = this._editingRootElement = editor.ui.getEditableElement()!;
 
 		this._scrollableRootAncestor = findClosestScrollableAncestor( editingRootElement );
 
@@ -92,10 +93,6 @@ export default class Minimap extends Plugin {
 		this.listenTo( editor.editing.view, 'render', () => {
 			this._syncMinimapToEditingRootScrollPosition();
 		} );
-
-		this.listenTo( editor.model.document.selection, 'change', () => {
-			this._editingRootElement = editor.ui.view.element!;
-		} )
 
 		this._syncMinimapToEditingRootScrollPosition();
 	}

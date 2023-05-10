@@ -160,7 +160,7 @@ export default class Title extends Plugin {
 		const editor = this.editor;
 		const data = editor.data;
 		const model = editor.model;
-		const root = editor.model.document.getRoot( this.editor.model.document.selection.getFirstRange()!.root.rootName! )!;
+		const root = editor.model.document.getRoot()!;
 		const view = editor.editing.view;
 		const viewWriter = new DowncastWriter( view.document );
 
@@ -197,7 +197,7 @@ export default class Title extends Plugin {
 	 * Returns the `title` element when it is in the document. Returns `undefined` otherwise.
 	 */
 	private _getTitleElement(): Element | undefined {
-		const root = this.editor.model.document.getRoot( this.editor.model.document.selection.getFirstRange()!.root.rootName! )!;
+		const root = this.editor.model.document.getRoot()!;
 
 		for ( const child of root.getChildren() as IterableIterator<Element> ) {
 			if ( isTitle( child ) ) {
@@ -237,7 +237,7 @@ export default class Title extends Plugin {
 	 */
 	private _fixTitleElement( writer: Writer ) {
 		const model = this.editor.model;
-		const modelRoot = model.document.getRoot( this.editor.model.document.selection.getFirstRange()!.root.rootName! )!;
+		const modelRoot = model.document.getRoot()!;
 
 		const titleElements = Array.from( modelRoot.getChildren() as IterableIterator<Element> ).filter( isTitle );
 		const firstTitleElement = titleElements[ 0 ];
@@ -280,7 +280,7 @@ export default class Title extends Plugin {
 	 * when it is needed for the placeholder purposes.
 	 */
 	private _fixBodyElement( writer: Writer ) {
-		const modelRoot = this.editor.model.document.getRoot( this.editor.model.document.selection.getFirstRange()!.root.rootName! )!;
+		const modelRoot = this.editor.model.document.getRoot()!;
 
 		if ( modelRoot.childCount < 2 ) {
 			this._bodyPlaceholder = writer.createElement( 'paragraph' );
@@ -297,7 +297,7 @@ export default class Title extends Plugin {
 	 * if it was created for the placeholder purposes and is not needed anymore.
 	 */
 	private _fixExtraParagraph( writer: Writer ) {
-		const root = this.editor.model.document.getRoot( this.editor.model.document.selection.getFirstRange()!.root.rootName! )!;
+		const root = this.editor.model.document.getRoot()!;
 		const placeholder = this._bodyPlaceholder!;
 
 		if ( shouldRemoveLastParagraph( placeholder, root ) ) {
@@ -317,6 +317,7 @@ export default class Title extends Plugin {
 		const editor: Editor & Partial<ElementApi> = this.editor;
 		const t = editor.t;
 		const view = editor.editing.view;
+		const viewRoot = view.document.getRoot();
 		const sourceElement = editor.sourceElement;
 
 		const titlePlaceholder = editor.config.get( 'title.placeholder' ) || t( 'Type your title' );
@@ -341,7 +342,6 @@ export default class Title extends Plugin {
 		// This post-fixer runs after the model post-fixer so we can assume that
 		// the second child in view root will always exist.
 		view.document.registerPostFixer( writer => {
-			const viewRoot = view.document.getRoot( this.editor.model.document.selection.getFirstRange()!.root.rootName! );
 			const body = viewRoot!.getChild( 1 ) as ViewElement;
 			let hasChanged = false;
 
@@ -385,7 +385,7 @@ export default class Title extends Plugin {
 				const selectedElements = Array.from( selection.getSelectedBlocks() );
 
 				if ( selectedElements.length === 1 && selectedElements[ 0 ].is( 'element', 'title-content' ) ) {
-					const firstBodyElement = model.document.getRoot( selection.getFirstRange()!.root.rootName! )!.getChild( 1 );
+					const firstBodyElement = model.document.getRoot()!.getChild( 1 );
 					writer.setSelection( firstBodyElement!, 0 );
 					cancel();
 				}
@@ -401,7 +401,7 @@ export default class Title extends Plugin {
 					return;
 				}
 
-				const root = editor.model.document.getRoot( selection.getFirstRange()!.root.rootName! )!;
+				const root = editor.model.document.getRoot()!;
 				const selectedElement = first( selection.getSelectedBlocks() );
 				const selectionPosition = selection.getFirstPosition()!;
 
