@@ -121,7 +121,7 @@ function generatePixelPreset( definition: string | FontSizeOption ): FontSizeOpt
 	if ( typeof definition === 'string' ) {
 		definition = {
 			title: definition,
-			model: `${ parseFloat( definition ) }px`
+			model: `${ parseFloat( definition ) }em`
 		};
 	}
 
