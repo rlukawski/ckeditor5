@@ -1,6 +1,6 @@
 {
   "name": "@rs.lukawski/ckeditor5-build-inline",
-  "version": "1.0.9",
+  "version": "37.1.0-0",
   "description": "The inline editor build of CKEditor 5 – the best browser-based rich text editor.",
   "keywords": [
     "ckeditor5-build",
@@ -49,7 +49,7 @@
     "@ckeditor/ckeditor5-paste-from-office": "^37.1.0",
     "@ckeditor/ckeditor5-table": "^37.1.0",
     "@ckeditor/ckeditor5-typing": "^37.1.0",
-    "@rs.lukawski/ckeditor5-font": "1.0.1"
+    "@rs.lukawski/ckeditor5-font": "^37.1.0-0"
   },
   "devDependencies": {
     "@ckeditor/ckeditor5-core": "^37.1.0",
